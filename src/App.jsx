@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import EditorPane from './components/EditorPane';
 import PreviewPane from './components/PreviewPane';
-import { Download, Upload, RotateCcw, Eraser, Save, FolderOpen, X as CloseIcon, Sun, Moon } from 'lucide-react';
+import { Download, Upload, RotateCcw, Eraser, Save, FolderOpen, X as CloseIcon, Sun, Moon, PenLine, Eye } from 'lucide-react';
 import './App.css';
 
 const defaultFields = [
@@ -40,6 +40,7 @@ function App() {
   });
 
   const [showSavedPrompts, setShowSavedPrompts] = useState(false);
+  const [mobileTab, setMobileTab] = useState('editor'); // 'editor' | 'preview'
 
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const saved = localStorage.getItem('isDarkMode');
@@ -207,9 +208,10 @@ function App() {
 
   return (
     <div className="app-container">
-      <div className="pane editor-pane">
+      {/* ===== EDITOR PANE ===== */}
+      <div className={`pane editor-pane ${mobileTab !== 'editor' ? 'mobile-hidden' : ''}`}>
         <div className="header" style={{ position: 'relative' }}>
-          <h1>结构化提示词生成</h1>
+          <h1>结构化提示词</h1>
           <div className="header-actions">
             <button className="icon-btn" onClick={() => setIsDarkMode(!isDarkMode)} title={isDarkMode ? "切换到浅色模式" : "切换到深色模式"}>
               {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
@@ -246,10 +248,10 @@ function App() {
             <button className="icon-btn" onClick={handleResetDefaults} title="恢复默认">
               <RotateCcw size={18} />
             </button>
-            <button className="icon-btn" onClick={handleExport} title="导出配置">
+            <button className="icon-btn mobile-hide" onClick={handleExport} title="导出配置">
               <Download size={18} />
             </button>
-            <label className="icon-btn" style={{cursor: 'pointer'}} title="导入配置">
+            <label className="icon-btn mobile-hide" style={{cursor: 'pointer'}} title="导入配置">
               <Upload size={18} />
               <input type="file" className="hidden" accept=".json" onChange={handleImport} />
             </label>
@@ -268,8 +270,28 @@ function App() {
           onReorderPhrases={handleReorderPhrases}
         />
       </div>
-      <div className="pane preview-pane">
+
+      {/* ===== PREVIEW PANE ===== */}
+      <div className={`pane preview-pane ${mobileTab !== 'preview' ? 'mobile-hidden' : ''}`}>
         <PreviewPane fields={fields} />
+      </div>
+
+      {/* ===== MOBILE TAB BAR ===== */}
+      <div className="mobile-tab-bar">
+        <button
+          className={`mobile-tab-btn ${mobileTab === 'editor' ? 'active' : ''}`}
+          onClick={() => setMobileTab('editor')}
+        >
+          <PenLine size={20} />
+          <span>编辑</span>
+        </button>
+        <button
+          className={`mobile-tab-btn ${mobileTab === 'preview' ? 'active' : ''}`}
+          onClick={() => setMobileTab('preview')}
+        >
+          <Eye size={20} />
+          <span>预览</span>
+        </button>
       </div>
     </div>
   );

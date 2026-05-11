@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Plus, X, Trash2, GripVertical, Edit2 } from 'lucide-react';
+import { Plus, X, Trash2, GripVertical, Edit2, Eraser } from 'lucide-react';
 
 const AutoResizeTextarea = ({ value, onChange, placeholder }) => {
   const textareaRef = useRef(null);
@@ -152,9 +152,14 @@ function EditorPane({ fields, onFieldChange, onAddField, onDeleteField, onRename
               )}
             </div>
             
-            <button className="icon-btn" onClick={() => onDeleteField(field.id)} title="删除区块">
-              <Trash2 size={16} />
-            </button>
+            <div style={{ display: 'flex', gap: '4px' }}>
+              <button className="icon-btn" onClick={() => onFieldChange(field.id, '')} title="清空内容">
+                <Eraser size={16} />
+              </button>
+              <button className="icon-btn" onClick={() => onDeleteField(field.id)} title="删除区块">
+                <Trash2 size={16} />
+              </button>
+            </div>
           </div>
           
           <AutoResizeTextarea
