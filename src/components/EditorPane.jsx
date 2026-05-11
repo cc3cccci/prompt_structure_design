@@ -50,8 +50,11 @@ function EditorPane({ fields, onFieldChange, onAddField, onDeleteField, onRename
   };
 
   const handlePhraseClick = (fieldId, phrase, currentValue) => {
-    const space = currentValue ? (currentValue.endsWith('\n') ? '' : '\n') : '';
-    onFieldChange(fieldId, currentValue + space + phrase);
+    const trimmed = currentValue.trimEnd();
+    // 如果当前内容不为空且末尾不是标点，加逗号连接；否则直接追加
+    const needsComma = trimmed.length > 0 && !/[，,。.！!？?；;\n]$/.test(trimmed);
+    const separator = needsComma ? '，' : (trimmed.length > 0 ? '' : '');
+    onFieldChange(fieldId, trimmed + separator + phrase);
   };
 
   const submitNewPhrase = (fieldId) => {
