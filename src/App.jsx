@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import EditorPane from './components/EditorPane';
 import PreviewPane from './components/PreviewPane';
-import { Download, Upload, RotateCcw, Eraser, Save, FolderOpen, X as CloseIcon } from 'lucide-react';
+import { Download, Upload, RotateCcw, Eraser, Save, FolderOpen, X as CloseIcon, Sun, Moon } from 'lucide-react';
 import './App.css';
 
 const defaultFields = [
@@ -41,6 +41,12 @@ function App() {
 
   const [showSavedPrompts, setShowSavedPrompts] = useState(false);
 
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const saved = localStorage.getItem('isDarkMode');
+    if (saved !== null) return JSON.parse(saved);
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
+
   useEffect(() => {
     localStorage.setItem('promptFields', JSON.stringify(fields));
   }, [fields]);
@@ -49,23 +55,42 @@ function App() {
     localStorage.setItem('savedPrompts', JSON.stringify(savedPrompts));
   }, [savedPrompts]);
 
+  useEffect(() => {
+    localStorage.setItem('isDarkMode', JSON.stringify(isDarkMode));
+    if (isDarkMode) {
+      document.body.classList.add('dark');
+    } else {
+      document.body.classList.remove('dark');
+    }
+  }, [isDarkMode]);
+
   const handleFieldChange = (id, newValue) => {
     setFields(prev => prev.map(f => f.id === id ? { ...f, value: newValue } : f));
   };
 
-  const handleAddCustomField = (name) => {
+  const handleAddField = (name) => {
     const newField = {
       id: 'custom_' + Date.now(),
       name,
       value: '',
-      phrases: [],
-      isCustom: true
+      phrases: []
     };
     setFields([...fields, newField]);
   };
 
   const handleDeleteField = (id) => {
     setFields(fields.filter(f => f.id !== id));
+  };
+
+  const handleRenameField = (id, newName) => {
+    setFields(prev => prev.map(f => f.id === id ? { ...f, name: newName } : f));
+  };
+
+  const handleReorderFields = (dragIndex, dropIndex) => {
+    const newFields = [...fields];
+    const draggedItem = newFields.splice(dragIndex, 1)[0];
+    newFields.splice(dropIndex, 0, draggedItem);
+    setFields(newFields);
   };
 
   const handleAddPhrase = (id, phrase) => {
@@ -94,6 +119,18 @@ function App() {
       if (f.id === id && f.phrases) {
         const newPhrases = [...f.phrases];
         newPhrases[phraseIndex] = newText;
+        return { ...f, phrases: newPhrases };
+      }
+      return f;
+    }));
+  };
+
+  const handleReorderPhrases = (fieldId, dragIndex, dropIndex) => {
+    setFields(prev => prev.map(f => {
+      if (f.id === fieldId && f.phrases) {
+        const newPhrases = [...f.phrases];
+        const draggedItem = newPhrases.splice(dragIndex, 1)[0];
+        newPhrases.splice(dropIndex, 0, draggedItem);
         return { ...f, phrases: newPhrases };
       }
       return f;
@@ -174,6 +211,10 @@ function App() {
         <div className="header" style={{ position: 'relative' }}>
           <h1>结构化提示词生成</h1>
           <div className="header-actions">
+            <button className="icon-btn" onClick={() => setIsDarkMode(!isDarkMode)} title={isDarkMode ? "切换到浅色模式" : "切换到深色模式"}>
+              {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
+            <div style={{ width: '1px', height: '24px', background: 'var(--panel-border)', margin: '0 4px' }}></div>
             <button className="icon-btn" onClick={handleSaveCurrentPrompt} title="存为模板">
               <Save size={18} />
             </button>
@@ -198,7 +239,7 @@ function App() {
                 </div>
               )}
             </div>
-            <div style={{ width: '1px', height: '24px', background: 'var(--border-color)', margin: '0 4px' }}></div>
+            <div style={{ width: '1px', height: '24px', background: 'var(--panel-border)', margin: '0 4px' }}></div>
             <button className="icon-btn" onClick={handleClearAll} title="清空内容">
               <Eraser size={18} />
             </button>
@@ -217,11 +258,14 @@ function App() {
         <EditorPane 
           fields={fields} 
           onFieldChange={handleFieldChange} 
-          onAddField={handleAddCustomField}
+          onAddField={handleAddField}
           onDeleteField={handleDeleteField}
+          onRenameField={handleRenameField}
+          onReorderFields={handleReorderFields}
           onAddPhrase={handleAddPhrase}
           onDeletePhrase={handleDeletePhrase}
           onEditPhrase={handleEditPhrase}
+          onReorderPhrases={handleReorderPhrases}
         />
       </div>
       <div className="pane preview-pane">
